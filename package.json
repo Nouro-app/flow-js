@@ -1,0 +1,32 @@
+{
+  "name": "@nouro/flow",
+  "module": "index.ts",
+  "private": false,
+  "type": "module",
+  "author": "1bye",
+  "description": "Nouro flow package, allows to execute flows",
+  "version": "0.0.2",
+  "scripts": {
+    "build": "bun build index.ts --minify --outdir dist"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/is-uuid": "^1.0.2",
+    "is-uuid": "^1.0.2",
+    "node-fetch-native": "^1.6.4",
+    "superstruct": "^1.0.4"
+  },
+  "files": [
+    "dist/",
+    "dist/index.js",
+    "index.ts",
+    "src/",
+    "src/flows/simple.ts",
+    "src/types.d.ts"
+  ]
+}
