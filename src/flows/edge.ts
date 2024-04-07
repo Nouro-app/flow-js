@@ -1,6 +1,6 @@
 import { fetch } from "node-fetch-native";
-import { assert, PayloadSchema } from "../schemas.ts";
-import { BaseClient } from "../base.ts";
+import { assert, EdgePayloadSchema } from "../schemas.ts";
+import { BaseClient, type WrappedResponse } from "../base.ts";
 
 export type FlowEdgePayload = {
     uuid: string,
@@ -38,7 +38,7 @@ export class FlowEdge extends BaseClient implements IFlowEdge {
         super();
         this.apiKey = apiKey;
         this.config = {
-            apiExecutionURL: config?.apiExecutionURL ?? "https://flow-executor.nouro-flow.workers.dev",
+            apiExecutionURL: config?.apiExecutionURL ?? "https://executor.flow.nouro.services",
             apiURL: config?.apiURL ?? ""
         };
     }
@@ -55,16 +55,23 @@ export class FlowEdge extends BaseClient implements IFlowEdge {
      * Returns Response if execution was successful
      * @param payload
      */
-    async execute(payload: FlowEdgePayload): Promise<Response> {
+    async execute(payload: FlowEdgePayload): Promise<WrappedResponse> {
         try {
             /* Validate payload */
-            assert(payload, PayloadSchema);
+            assert(payload, EdgePayloadSchema);
 
-            return await fetch(this.config.apiExecutionURL, {
-                method: "POST",
-                body: JSON.stringify(payload),
-                headers: this.getHeaders()
-            });
+            return this.wrapResponse(
+                await fetch(this.config.apiExecutionURL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        ...payload,
+                        /* Temporal region, because the superstruct in flow-executor have issues with intersection */
+                        region: "none",
+                        type: "edge"
+                    }),
+                    headers: this.getHeaders()
+                })
+            );
         } catch (e) {
             throw e;
         }

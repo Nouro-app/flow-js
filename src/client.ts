@@ -46,6 +46,26 @@ export type Variable = ({
     name: string;
 }
 
+export type LocalCredential = {
+    /**
+     * If passes object with name, tries find credential using name not id
+     */
+    credential_id: string | {
+        name: string;
+    };
+
+    /**
+     * Name of credential
+     * Max length: 50
+     */
+    name: string;
+
+    inputs: {
+        name: string;
+        value: string;
+    }[]
+}
+
 export type UUID = `${string}-${string}-${string}-${string}`;
 
 export type BaseAssignedFlow = {
@@ -71,6 +91,11 @@ export type BaseAssignedFlow = {
      * - Expects uuid's of credentials
      */
     includedCredentials?: UUID[];
+
+    /**
+     * Creates local credential
+     */
+    credentials: LocalCredential[]
 }
 
 export type CreateAssignedOutput = {
@@ -155,6 +180,12 @@ export type BuildAssignedFlowConnections<Nodes> = {
     toHandle: string | "entry";
 }[];
 
+export const NOURO_FLOW_BASE_CLIENT_URL = process.env?.NOURO_FLOW_BASE_CLIENT_URL
+    ?? "http://localhost:3000";
+
+export const NOURO_FLOW_BASE_API_URL = process.env?.NOURO_FLOW_BASE_CLIENT_URL
+    ?? "http://localhost:3003/v1";
+
 export class FlowClient extends BaseClient implements IFlowClient {
     config: FlowClientConfig;
     clientUrl: string;
@@ -163,8 +194,8 @@ export class FlowClient extends BaseClient implements IFlowClient {
     constructor(cfg: FlowClientConfig) {
         super();
         this.config = cfg;
-        this.clientUrl = cfg?.client?.url ?? "http://localhost:3000";
-        this.apiUrl = cfg?.apiUrl ?? "http://localhost:3003/v1";
+        this.clientUrl = cfg?.client?.url ?? NOURO_FLOW_BASE_CLIENT_URL;
+        this.apiUrl = cfg?.apiUrl ?? NOURO_FLOW_BASE_API_URL;
     }
 
     /**
@@ -204,8 +235,22 @@ export class FlowClient extends BaseClient implements IFlowClient {
      * @param directPassword
      * Not recommended to pass password directly, instead pass it in browser
      */
-    async generateAssignedFlowLink(uuid: string, directPassword?: string) {
-        return `${this.clientUrl}/workspace/${uuid}/assigned?assign_type=password&password=${directPassword ?? ""}`
+    generateAssignedFlowLink(uuid: string, directPassword?: string) {
+        const q = new URLSearchParams(`assign_type=password&password=${Buffer.from(directPassword ?? "").toString("base64")}`);
+        return `${this.clientUrl}/assigned/${uuid}/flow?${q}`;
+    }
+
+    /**
+     * @param uuid
+     * Not recommended to pass password directly, instead pass it in browser
+     * @param cfg
+     */
+    static generateAssignedFlowLink(uuid: string, cfg?: {
+        directPassword?: string,
+        clientUrl?: string
+    }) {
+        const q = new URLSearchParams(`assign_type=password&password=${Buffer.from(cfg?.directPassword ?? "").toString("base64")}`);
+        return `${cfg?.clientUrl ?? NOURO_FLOW_BASE_CLIENT_URL}/assigned/${uuid}/flow?${q}`;
     }
 
     /**

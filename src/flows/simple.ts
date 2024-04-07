@@ -1,7 +1,7 @@
 import type { PayloadRegion } from "../types";
 import { fetch } from "node-fetch-native";
-import { assert, PayloadSchema } from "../schemas.ts";
-import { BaseClient } from "../base.ts";
+import { assert, SimplePayloadSchema } from "../schemas.ts";
+import { BaseClient, type WrappedResponse } from "../base.ts";
 
 export type FlowSimplePayload = {
     uuid: string,
@@ -57,19 +57,21 @@ export class FlowSimple extends BaseClient implements IFlowSimple {
      * Returns Response if execution was successful
      * @param payload
      */
-    async execute(payload: FlowSimplePayload): Promise<Response> {
+    async execute(payload: FlowSimplePayload): Promise<WrappedResponse> {
         try {
             /* Validate payload */
-            assert(payload, PayloadSchema);
+            assert(payload, SimplePayloadSchema);
 
-            return await fetch(this.config.apiExecutionURL, {
-                method: "POST",
-                body: JSON.stringify({
-                    ...payload,
-                    type: "simple"
-                }),
-                headers: this.getHeaders()
-            });
+            return this.wrapResponse(
+                await fetch(this.config.apiExecutionURL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        ...payload,
+                        type: "simple"
+                    }),
+                    headers: this.getHeaders()
+                })
+            );
         } catch (e) {
             throw e;
         }

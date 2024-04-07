@@ -8,8 +8,19 @@ export type {
     IFlowEdge,
     FlowEdgeConfig
 } from "./src/flows/edge.ts";
-export type { PayloadRegion } from "./src/types";
-export type { IFlowClient } from "./src/client.ts";
+export type { PayloadRegion, FlowTypes } from "./src/types";
+export type {
+    IFlowClient,
+    UUID,
+    FlowClientConfig,
+    BaseAssignedFlow,
+    BuildAssignedFlowConnections,
+    BuildAssignedFlowNodes,
+    CreateAssigned,
+    CreateAssignedOutput,
+    Variable,
+    EnvironmentalVariable
+} from "./src/client.ts";
 export { FlowSimple } from "./src/flows/simple.ts";
 export { FlowClient } from "./src/client.ts";
 export { FlowEdge } from "./src/flows/edge.ts";

@@ -6,7 +6,6 @@ import {
     create,
     defaulted as d,
     define,
-    intersection,
     literal,
     number,
     object,
@@ -25,7 +24,7 @@ export {
 
 export const UUIDSchema = define<UUID>("Uuid", (value) => isUUID.v4(value as string))
 
-export const PayloadSchema = object({
+export const SimplePayloadSchema = object({
     uuid: string(),
     region: string(),
     variables: optional(record(string(), unknown())),
@@ -44,27 +43,45 @@ export const PayloadSchema = object({
     }))
 })
 
-export const VariableSchema = intersection([
-    union([
-        object({
-            type: literal("string"),
-            value: string()
-        }),
-        object({
-            type: literal("number"),
-            value: number()
-        }),
-        object({
-            type: literal("boolean"),
-            value: boolean()
-        }),
-        object({
-            type: literal("json"),
-            value: object()
-        }),
-    ]), object({
-        name: string()
-    })
+export const EdgePayloadSchema = object({
+    uuid: string(),
+    variables: optional(record(string(), unknown())),
+    session: object({
+        id: string(),
+        globalId: optional(string())
+    }),
+    override: optional(object({
+        nodes: optional(record(string(), object({
+            inputs: optional(record(string(), unknown()))
+        })))
+    })),
+    config: optional(object({
+        realTimeLogging: optional(boolean()),
+        caching: optional(boolean()),
+    }))
+})
+
+export const VariableSchema = union([
+    object({
+        name: string(),
+        type: literal("string"),
+        value: string()
+    }),
+    object({
+        name: string(),
+        type: literal("number"),
+        value: number()
+    }),
+    object({
+        name: string(),
+        type: literal("boolean"),
+        value: boolean()
+    }),
+    object({
+        name: string(),
+        type: literal("json"),
+        value: object()
+    }),
 ])
 
 export const EnvironmentalVariableSchema = object({
@@ -81,22 +98,47 @@ export const BaseAssignedFlowSchema = object({
     includedCredentials: d(array(UUIDSchema), [])
 })
 
-export const CreateAssignedFlowSchema = object({
-    flow: intersection([
-        union([
-            object({
-                type: literal("edge"),
-            }),
-            object({
-                type: literal("simple"),
-                region: string(),
+export const LocalCredentialFlowSchema = object({
+    credential_id: union([
+        string(),
+        object({
+            name: string()
+        })
+    ]),
+    name: string(),
+    inputs: array(object({
+        name: string(),
+        value: string()
+    }))
+})
 
-                memory: d(number(), 128),
-                timeout: d(number(), 3),
-                storage: d(number(), 512),
-            }),
-        ]),
-        BaseAssignedFlowSchema
+export const CreateAssignedFlowSchema = object({
+    flow: union([
+        object({
+            type: literal("edge"),
+            name: string(),
+            description: optional(string()),
+
+            variables: d(array(VariableSchema), []),
+            environmentalVariables: d(array(EnvironmentalVariableSchema), []),
+            includedCredentials: d(array(UUIDSchema), []),
+            credentials: d(array(LocalCredentialFlowSchema), [])
+        }),
+        object({
+            type: literal("simple"),
+            name: string(),
+            description: optional(string()),
+
+            variables: d(array(VariableSchema), []),
+            environmentalVariables: d(array(EnvironmentalVariableSchema), []),
+            includedCredentials: d(array(UUIDSchema), []),
+            credentials: d(array(LocalCredentialFlowSchema), []),
+            region: string(),
+
+            memory: d(number(), 128),
+            timeout: d(number(), 3),
+            storage: d(number(), 512)
+        }),
     ]),
 
     limits: optional(object({

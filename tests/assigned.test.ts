@@ -7,6 +7,7 @@ const client = new FlowClient({
 
 test("Assigned flow test", async () => {
     // x8evnwkchgoczfmlentva8iios4yyy1z3yir
+    // =pGo+c$BRxmZ)#Y^&t%p(g(iq85qbJpG=
     console.log(
         await client.createAssignedFlow({
             flow: {
@@ -51,4 +52,6 @@ test("Assigned flow test", async () => {
         }
     ])
 
+}, {
+    timeout: 20000
 })
